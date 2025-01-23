@@ -9,12 +9,13 @@ void setupHBridge() {
 }
 
 void controlMotor(int value) {
-  if (value > 0) {
-    ledcWrite(L_PWM_PIN, value);
-    ledcWrite(R_PWM_PIN, 0);
-  } else {
-    value = -value;
-    ledcWrite(L_PWM_PIN, 0);
-    ledcWrite(R_PWM_PIN, value);
-  }
+    value = constrain(value, -4095, 4095); // Limitar o valor para o range permitido
+    if (value > 0) {
+        ledcWrite(L_PWM_PIN, value);
+        ledcWrite(R_PWM_PIN, 0);
+    } else {
+        value = -value;
+        ledcWrite(L_PWM_PIN, 0);
+        ledcWrite(R_PWM_PIN, value);
+    }
 }

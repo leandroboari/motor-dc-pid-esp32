@@ -5,6 +5,10 @@ void setupPotentiometer() {
   analogSetPinAttenuation(potentiometerPin, ADC_0db);
 }
 
+int getAnalogicValue() {
+  return analogRead(potentiometerPin);
+}
+
 float getVoltageValue() {
   int analogValue = analogRead(potentiometerPin);
   float voltageValue = analogValue * (3.3 / 4095.0);

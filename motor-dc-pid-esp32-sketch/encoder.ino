@@ -1,10 +1,13 @@
-const int encoderPin = 4;
+const int encoderPin = 13;
 
 volatile unsigned long pulseCount = 0;
 
 void IRAM_ATTR handleEncoderInterrupt() {
+  noInterrupts();
   pulseCount++;
+  interrupts();
 }
+
 
 
 void setupEncoder() {
@@ -13,16 +16,9 @@ void setupEncoder() {
 }
 
 
-void loopEncoder() {
+int getEncoderCount() {
   noInterrupts();
   unsigned long currentPulseCount = pulseCount;
   interrupts();
-  float rotations = currentPulseCount / 20.0;
-
-  Serial.print("Pulsos: ");
-  Serial.print(currentPulseCount);
-  Serial.print(" | Rotacoes: ");
-  Serial.println(rotations);
-
-  delay(500);
+  return currentPulseCount;
 }
