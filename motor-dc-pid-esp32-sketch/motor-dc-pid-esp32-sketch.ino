@@ -1,47 +1,91 @@
-float Kp = 1.0; // Ganho Proporcional
-float Ki = 0.1; // Ganho Integral
-float Kd = 0.01; // Ganho Derivativo
+#define NUM_SAMPLES 20
 
-float targetSpeed = 0; // Velocidade desejada (potenciômetro)
-float currentSpeed = 0; // Velocidade atual (encoder)
-float controlOutput = 0; // Saída do controlador PID
-float integral = 0; // Acumulador do erro integral
-float previousError = 0; // Erro da iteração anterior
-unsigned long previousTime = 0; // Tempo da última execução do PID
+volatile unsigned long pulseCount = 0;
+unsigned long previousTime = 0;
+unsigned long pulseCountPrev = 0;
 
-const int pulsesPerRevolution = 20; // Altere para o número de pulsos por rotação do seu encoder
-const float gearRatio = 1.0; // Relação de redução do motor, se houver
-const float timeInterval = 0.05; // Intervalo de tempo entre leituras (50ms -> 0.05s)
+float speedBuffer[NUM_SAMPLES] = {0};
+int bufferIndex = 0;
+float motorSpeedRPM = 0;
+float speedSetPoint = 0;
+float motorTension = 0;
 
-const float factor = (60.0 / (pulsesPerRevolution * gearRatio * timeInterval));
+// Ajuste dos ganhos PID
+float Kp = 2.0;
+float Ki = 5.0;
+float Kd = 0.1;
 
+const unsigned long intervalMs = 50;
+
+float previousError = 0;
+float penultimateError = 0;
+
+float integral = 0;
 
 void setup() {
   setupEsp32();
   setupButton();
-  setupPotentiometer();
+  setupPot();
   setupHBridge();
   setupEncoder();
   setupDisplay();
+  delay(1000);
 }
 
 void loop() {
-  int potentiometerValue = getAnalogicValue();
+  // Leitura do potenciômetro e cálculo do setpoint
+  float potValue = (float)getPotValue();
+  motorTension = map(potValue, 0.0, 4095.0, 0.0, 5.0);
+  speedSetPoint = map(potValue, 0.0, 4095.0, 0.0, 480.0);
 
-  // Mapear o valor do potenciômetro para o range de velocidade do encoder
-  targetSpeed = map(potentiometerValue, 0, 4095, 0, 100); // Velocidade de 0 a 100 RPM
+  // Calcula a velocidade atual do motor
+  calculateMotorSpeed();
 
-  // Obter a velocidade atual do encoder (em RPM)
-  currentSpeed = getEncoderCount() * factor; // Converte pulsos em RPM
+  // Controle PID
+  float error = speedSetPoint - motorSpeedRPM;
 
-  // Calcular o PID
-  controlOutput = calculatePID(targetSpeed, currentSpeed);
+  float P = Kp * error;
+  integral += error * (intervalMs / 1000.0);
+  float I = Ki * integral;
 
-  // Enviar a saída para o motor
-  controlMotor((int)controlOutput);
+  float D = Kd * (error - 2 * previousError + penultimateError) / (intervalMs / 1000.0);
+  float output = P + I + D;
 
-  // Exibir no display
-  writeDisplay("T: " + String(targetSpeed) + " C: " + String(currentSpeed));
+  penultimateError = previousError;
+  previousError = error;
 
-  delay(50); // Ajuste conforme necessário
+  // Controla o motor com base na saída do PID
+  controlMotor(output);
+
+  // Atualiza os valores do PID via Serial Monitor
+  updatePIDValuesFromSerial();
+
+  // Exibição no display
+  String text = "";
+  text += "Pot: ";
+  text += (String)potValue;
+  text += "\n";
+
+  text += "Voltage: ";
+  text += (String)motorTension;
+  text += " V\n";
+
+  text += "Setpoint: ";
+  text += (String)speedSetPoint;
+  text += " rpm\n";
+
+  text += "Speed: ";
+  text += String(motorSpeedRPM, 1);
+  text += " rpm \n";
+
+  writeDisplay(text);
+
+
+  // Saída serial para debug
+  Serial.print("Setpoint:");
+  Serial.print(speedSetPoint);
+  Serial.print(",RPM:");
+  Serial.println(motorSpeedRPM);
+
+  delay(50);
 }

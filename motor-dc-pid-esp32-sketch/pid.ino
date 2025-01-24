@@ -1,15 +1,33 @@
+void updatePIDValuesFromSerial() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n'); // Lê a string enviada pelo Serial Monitor
+    input.trim(); // Remove espaços em branco
 
+    // Divide a string em três valores separados por vírgula
+    int commaIndex1 = input.indexOf(',');
+    int commaIndex2 = input.indexOf(',', commaIndex1 + 1);
 
-float calculatePID(float target, float current) {
-    unsigned long currentTime = millis();
-    float deltaTime = (currentTime - previousTime) / 1000.0; // Tempo em segundos
-    previousTime = currentTime;
+    if (commaIndex1 > 0 && commaIndex2 > commaIndex1) {
+      // Extrai os valores de Kp, Ki, e Kd
+      float newKp = input.substring(0, commaIndex1).toFloat();
+      float newKi = input.substring(commaIndex1 + 1, commaIndex2).toFloat();
+      float newKd = input.substring(commaIndex2 + 1).toFloat();
 
-    float error = target - current;
-    integral += error * deltaTime; // Erro acumulado
-    float derivative = (error - previousError) / deltaTime; // Mudança no erro
-    previousError = error;
+      // Atualiza os ganhos do PID
+      Kp = newKp;
+      Ki = newKi;
+      Kd = newKd;
 
-    float output = (Kp * error) + (Ki * integral) + (Kd * derivative);
-    return constrain(output, -4095, 4095); // Limitar a saída
+      // Exibe os novos valores no Serial Monitor
+      Serial.println("Novos valores de PID atualizados:");
+      Serial.print("Kp: ");
+      Serial.println(Kp);
+      Serial.print("Ki: ");
+      Serial.println(Ki);
+      Serial.print("Kd: ");
+      Serial.println(Kd);
+    } else {
+      Serial.println("Formato incorreto! Use: kp,ki,kd (exemplo: 2.5,4.0,0.1)");
+    }
+  }
 }

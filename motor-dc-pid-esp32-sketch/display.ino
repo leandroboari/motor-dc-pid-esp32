@@ -2,21 +2,22 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-const int displaySdaPin = 19;
-const int displaySclPin = 18;
-const int displayVccPin = 17;
-const int displayGndPin = 5;
+#define DISPLAY_SDA 19
+#define DISPLAY_SCL 18
+#define DISPLAY_VCC 17
+#define DISPLAY_GND 5
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
 void setupDisplay() {
-  pinMode(displayVccPin, OUTPUT);
-  pinMode(displayGndPin, OUTPUT);
-  digitalWrite(displayVccPin, HIGH);
-  digitalWrite(displayGndPin, LOW);
-  Wire.begin(displaySdaPin, displaySclPin);
+  pinMode(DISPLAY_VCC, OUTPUT);
+  pinMode(DISPLAY_GND, OUTPUT);
+  digitalWrite(DISPLAY_VCC, HIGH);
+  digitalWrite(DISPLAY_GND, LOW);
+  Wire.begin(DISPLAY_SDA, DISPLAY_SCL);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
 }
 
 void writeDisplay(String text) {
@@ -24,9 +25,6 @@ void writeDisplay(String text) {
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
-  display.println(F("Potenciometro:"));
-  display.setTextSize(2);
-  display.setCursor(0, 16);
-  display.println(text);
+  display.print(text);
   display.display();
 }

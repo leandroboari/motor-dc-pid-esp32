@@ -1,13 +1,13 @@
-const int buttonPin = 25;
-const int buttonPinGnd = 32;
+#define BUTTON_PIN 25
+#define BUTTON_GND_PIN 32
 
 void setupButton() {
-  pinMode(buttonPinGnd, OUTPUT);
-  digitalWrite(buttonPinGnd, LOW);
-  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(BUTTON_GND_PIN, OUTPUT);
+  digitalWrite(BUTTON_GND_PIN, LOW);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 }
 
 bool getButtonState() {
-  int buttonState = digitalRead(buttonPin);
+  int buttonState = digitalRead(BUTTON_PIN);
   return buttonState == LOW ? true : false;
 }
