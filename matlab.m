@@ -1,7 +1,7 @@
 clc; clear all;
 
-K = 500 / 4.6; % rpm / V
-tau = 0.2;
+K = 480 / 3000; % rpm / V
+tau = 1;
 
 num = K;               
 den = [tau, 1];      
