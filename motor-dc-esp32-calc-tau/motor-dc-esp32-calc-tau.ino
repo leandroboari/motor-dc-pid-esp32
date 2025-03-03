@@ -1,17 +1,17 @@
-#define NUM_SAMPLES 20
+#define NUM_SAMPLES 5
 
 volatile unsigned long pulseCount = 0;
-unsigned long previousTime = 0;
 unsigned long pulseCountPrev = 0;
+unsigned long previousTime = 0;
 
-float speedBuffer[NUM_SAMPLES] = {0};
+float speedBuffer[NUM_SAMPLES] = {};
 int bufferIndex = 0;
 float motorSpeedRPM = 0;
 float speedFinal = 480; // Velocidade final em RPM
 float speed63Percent = 480 * 0.633; // 63% da velocidade final
 float tau = 0; // Constante de tempo calculada
 
-const unsigned long intervalMs = 10;
+const unsigned long intervalMs = 1000;
 
 unsigned long startTime = 0;
 unsigned long time63Percent = 0;
@@ -21,38 +21,28 @@ void setup() {
   setupEsp32();
   setupEncoder();
   setupHBridge();
-
+  delay(3000);
   controlMotor(4095);
   startTime = millis();
 }
 
 void loop() {
-  calculateMotorSpeed();
+  unsigned long currentTime = millis();
+  if (currentTime - previousTime >= intervalMs) {
+    noInterrupts();
+    unsigned long currentPulseCount = pulseCount;
+    interrupts();
 
-  if (measuringTau) {
+    unsigned long pulses = currentPulseCount - pulseCountPrev;
+    motorSpeedRPM = (pulses * 60.0 / 20.0) / (intervalMs / 1000.0);
 
-    if (motorSpeedRPM >= speed63Percent && time63Percent == 0) {
-      time63Percent = millis();
-      tau = (time63Percent - startTime) / 1000.0; // Converte para segundos
-      measuringTau = false;
+    previousTime = currentTime;
+    pulseCountPrev = currentPulseCount;
 
-      Serial.println("Medição de tau concluída!");
-      Serial.print("Velocidade Final (RPM): ");
-      Serial.println(speedFinal);
-      Serial.print("Tau (s): ");
-      Serial.println(tau);
-
-      controlMotor(0);
-    }
-    Serial.print("Velocidade Atual: ");
+    Serial.print(millis()/1000);
+    Serial.print(",");
     Serial.print(motorSpeedRPM);
-    Serial.print(" RPM, Tempo: ");
-    Serial.print((millis() - startTime) / 1000.0);
-    Serial.println(" s");
+    Serial.println();
 
   }
-
-
-
-  delay(intervalMs);
 }

@@ -14,15 +14,16 @@
 #define POT_PIN 34
 #define BUTTON_PIN 25
 #define BUTTON_GND_PIN 32
-#define STARTUP_DELAY_MS 1000
-#define NUM_SAMPLES 10
+#define STARTUP_DELAY_MS 3000
+#define NUM_SAMPLES 20
 #define LOOP_DELAY_MS 5 // 50
 #define SETPOINT_MAX_VALUE 380
 
-#define FACTOR 15
-#define Kp 0.0022 * FACTOR
-#define Ki 0.2275 * FACTOR
-#define Kd 0.0001 * FACTOR
+//#define FACTOR 15.3846154
+#define FACTOR 15.3846154
+#define Kp 2
+#define Ki 4
+#define Kd 0.01
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -37,6 +38,8 @@ const unsigned long intervalMs = 50;
 float previousError = 0;
 float penultimateError = 0;
 float integral = 0;
+
+int output = 0;
 
 void IRAM_ATTR handleEncoderInterrupt() {
   pulseCount++;
@@ -129,13 +132,26 @@ void loop() {
   // Calcula a velocidade atual do motor
   calculateMotorSpeed();
 
+//  if(motorSpeed > 295) {
+//    controlMotor(output);
+//    Serial.print(float(millis() / 1000.0f));
+//    Serial.print(",");
+//    Serial.print(speedSetPoint);
+//    Serial.print(",");
+//    Serial.print(motorSpeed);
+//    Serial.print(",0,500");
+//    Serial.println();
+//    delay(LOOP_DELAY_MS * 1.8);
+//    return;
+//  }
+
   // Controle PID
   float error = speedSetPoint - motorSpeed;
   float P = Kp * error;
   integral += error * (intervalMs / 1000.0);
   float I = Ki * integral;
   float D = Kd * (error - 2 * previousError + penultimateError) / (intervalMs / 1000.0);
-  float output = P + I + D;
+  output = P + I + D;
   penultimateError = previousError;
   previousError = error;
 
@@ -168,7 +184,7 @@ void loop() {
   display.display();
 
   // Envia por serial
-  Serial.print(millis() / 1000);
+  Serial.print(float(millis() / 1000.0f));
   Serial.print(",");
   Serial.print(speedSetPoint);
   Serial.print(",");

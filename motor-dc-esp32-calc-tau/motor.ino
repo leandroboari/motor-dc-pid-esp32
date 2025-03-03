@@ -21,27 +21,5 @@ void controlMotor(int value) {
 }
 
 void calculateMotorSpeed() {
-  unsigned long currentTime = millis();
-  if (currentTime - previousTime >= intervalMs) {
-    noInterrupts();
-    unsigned long currentPulseCount = pulseCount;
-    interrupts();
-
-    unsigned long pulses = currentPulseCount - pulseCountPrev;
-    float currentSpeedRPM = (pulses * 60.0 / 20.0) / (intervalMs / 1000.0);
-
-    // Filtro de média móvel
-    speedBuffer[bufferIndex] = currentSpeedRPM;
-    bufferIndex = (bufferIndex + 1) % NUM_SAMPLES;
-
-    motorSpeedRPM = 0.0;
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-      motorSpeedRPM += speedBuffer[i];
-    }
-    motorSpeedRPM /= NUM_SAMPLES;
-
-    // Atualizar variáveis
-    previousTime = currentTime;
-    pulseCountPrev = currentPulseCount;
-  }
+ 
 }
